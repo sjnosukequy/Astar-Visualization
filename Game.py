@@ -19,7 +19,6 @@ class Game:
         self.Player =  []
         self.END_aw = []
 
-        self.path = []
         self.screen = pygame.Surface((screen_w, screen_h))
 
         self.time = 0
@@ -52,9 +51,14 @@ class Game:
 
                         self.Block[mouse_locostr] = {'type' : 'End' , 'Color' : 'red', 'Pos' : (mouse_loco[0], mouse_loco[1])}
                         self.END_aw.append(list(mouse_loco))
-                elif self.hand == 0 and self.start == 0:
-                    self.start += 1
-                    self.Player.append(Player(self, mouse_loco))
+                elif self.hand == 0 and self.start < 5:
+                    self.start = len(self.Player)
+                    Exist = False
+                    for i in self.Player:
+                        if i.pos[0] == mouse_loco[0] and i.pos[1] == mouse_loco[1]:
+                            Exist = True
+                    if not Exist:
+                        self.Player.append(Player(self, mouse_loco))
 
             if right_click:
                 if mouse_locostr in self.Block:
@@ -65,21 +69,23 @@ class Game:
                 for i in self.Player.copy():
                     if not i.path:
                         if mouse_loco[0] == i.pos[0] and mouse_loco[1] == i.pos[1]:
-                            self.start = 0
-                            self.Player.clear()
+                            self.Player.remove(i)
+                            self.start = len(self.Player)
 
         if ISPath:
-            self.Player[0].get_path()
+            # self.Player[0].get_path()
             self.time = -round(self.time, 2)
-        Draw_open(self.screen)
-        Draw_close(self.screen)
-        self.Draw_path('yellow')
+
+        if len(self.Player) == 1:  
+            Draw_open(self.screen)
+            Draw_close(self.screen)
 
         self.Tile_render()
 
         self.Showtime(Display)
 
         for i in self.Player:
+            self.Draw_path('yellow', i.path)
             i.update()
             i.render(self.screen)
 
@@ -87,11 +93,11 @@ class Game:
         self.ghosting(mouse_loco)
         
         self.UI()
-    def Draw_path(self, color):
+    def Draw_path(self, color, path):
         surf = pygame.Surface((self.Block_size, self.Block_size))
         surf.fill(color)
-        if self.path:
-            for i in self.path:
+        if path:
+            for i in path:
                 self.screen.blit(surf, (i[0]*self.Block_size, i[1]*self.Block_size ))
     
     def Draw_grid(self, color):
@@ -151,6 +157,14 @@ class Game:
         text_2 = Font.render('Timer', False, 'white')
         t_rect2 = text_2.get_rect(bottomright = (screen_w + 64, screen_h - 30))
         surf.blit(text_2, t_rect2)
+
+        text_3 = Font.render('Count', False, 'white')
+        t_rect3 = text_3.get_rect(bottomright = (screen_w + 64, screen_h - 90))
+        surf.blit(text_3, t_rect3)
+
+        text_4 = Font.render(str(self.start), False, 'white')
+        t_rect4 = text_4.get_rect(bottomright = (screen_w + 64, screen_h - 60))
+        surf.blit(text_4, t_rect4)
         
 
 if __name__ == '__main__':
@@ -190,11 +204,13 @@ if __name__ == '__main__':
                 if event.key == pygame.K_SPACE:
                     if game.Player and game.END_aw:
                         ISPath = True
-                        with concurrent.futures.ThreadPoolExecutor() as executor:
-                            future = executor.submit( ASearch, game ,( int(game.Player[0].pos[0]), int(game.Player[0].pos[1]) ), game.END_aw[0] )
-                            return_value = future.result()
-                            game.path = return_value[0]
-                            game.time = return_value[1] #type: ignore
+                        for i in game.Player:
+                            with concurrent.futures.ThreadPoolExecutor() as executor:
+                                # path = []
+                                future = executor.submit( ASearch, game ,( int(i.pos[0]), int(i.pos[1]) ), game.END_aw[0] )
+                                return_value = future.result()
+                                i.get_path(return_value[0])
+                                game.time = return_value[1] #type: ignore
                         # game.path, game.time = ASearch(game ,( int(game.Player[0].pos[0]), int(game.Player[0].pos[1]) ), game.END_aw[0]) #type: ignore
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_SPACE:

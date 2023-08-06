@@ -43,10 +43,9 @@ class Player:
             
             
     
-    def get_path(self):
-        if self.game.path:
-            self.path = self.game.path.copy()
-            self.path.reverse()
+    def get_path(self, path):
+        self.path = path.copy()
+        self.path.reverse()
 
 
     def render(self, screen):

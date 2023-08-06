@@ -24,6 +24,10 @@ A Path-finding visualization
 > <span style="color: Orange"> **Orange** </span> : Close_path
 >
 > <span style="color: Blue"> **Blue** </span> : Open_path
+>
+>  + Support up to **5 start points**
+> 
+>  + Show **Close_path** and **Open_path** only support **1 start point**
 
 # REQUIRMENTS
 ```PYTHON
