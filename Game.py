@@ -1,6 +1,7 @@
 import pygame, sys
 from Player import Player
 from Algo import ASearch, Draw_open, Draw_close
+import concurrent.futures
 
 Collision = ['Wall']
 Checking = [(1, 0, 10), (-1, 0, 10), (0, 1, 10), (0, -1, 10)]
@@ -68,7 +69,6 @@ class Game:
                             self.Player.clear()
 
         if ISPath:
-            self.path, self.time = ASearch(game ,( int(game.Player[0].pos[0]), int(game.Player[0].pos[1]) ), game.END_aw[0])
             self.Player[0].get_path()
             self.time = -round(self.time, 2)
         Draw_open(self.screen)
@@ -190,6 +190,12 @@ if __name__ == '__main__':
                 if event.key == pygame.K_SPACE:
                     if game.Player and game.END_aw:
                         ISPath = True
+                        with concurrent.futures.ThreadPoolExecutor() as executor:
+                            future = executor.submit( ASearch, game ,( int(game.Player[0].pos[0]), int(game.Player[0].pos[1]) ), game.END_aw[0] )
+                            return_value = future.result()
+                            game.path = return_value[0]
+                            game.time = return_value[1] #type: ignore
+                        # game.path, game.time = ASearch(game ,( int(game.Player[0].pos[0]), int(game.Player[0].pos[1]) ), game.END_aw[0]) #type: ignore
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_SPACE:
                     ISPath = False
