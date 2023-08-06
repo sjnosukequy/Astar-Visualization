@@ -11,8 +11,6 @@ A Path-finding visualization
 
 `Space` : Find path
 
-`G` : Replay
-
 # NOTES
 
 ><span style="color:white"> **Black** </span> : Wall
