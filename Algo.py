@@ -1,6 +1,7 @@
 import math
 import pygame
 import time
+import random, numpy
 
 class PioQueue:
     def __init__(self):
@@ -133,6 +134,54 @@ def Draw_close(surf):
 def Clear_visual():
     close_list_copy.clear()
     open_list_copy.clear()
+
+def Maze(width, height, Block_size):
+    w_block, h_block = width // Block_size, height // Block_size
+    cells = numpy.zeros((w_block, h_block))
+    stack = []
+    wall = []
+
+    ini_pos = [0, 0]
+    stack.append(ini_pos)
+    cells[0,0] = 1
+
+    while stack:
+        obj = stack[-1]
+        stack.remove(obj)
+
+        x = obj[0]
+        y= obj[1]
+
+        Neighbours = []
+        for dir in Checking:
+            if x >= 0 and x < w_block - 1:
+                if y >= 0 and y < h_block - 1:
+                    if cells[x + dir[0], y + dir[1]] == 0:
+                        Neighbours.append(dir)
+        # print(Neighbours)
+        
+        if Neighbours:
+            stack.append(obj)
+            choice = random.choice(Neighbours)
+            cells[x + choice[0], y + choice[1]] = 1
+            stack.append( [x + choice[0], y + choice[1]] )
+
+            for dir in Neighbours:
+                if dir[0] != choice[0] and dir[1] != choice[1]:
+                    cells[x + dir[0], y + dir[1]] = -1
+    
+    ##BULDING WALL
+    for i in range(w_block):
+        for k in range(h_block):
+            if cells[i][k] == -1 or cells[i][k] == 0:
+                wall.append([i, k])
+
+    return wall
+
+def extract(game, wall):
+    for i in wall:
+        loco = str(i[0]) + ',' + str(i[1])
+        game.Block[loco] = {'type' : 'Wall' , 'Color' : 'black', 'Pos' : (i[0], i[1])}
 
 
 

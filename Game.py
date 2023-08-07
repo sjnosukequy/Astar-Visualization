@@ -1,6 +1,6 @@
 import pygame, sys
 from Player import Player
-from Algo import ASearch, Draw_open, Draw_close, Clear_visual
+from Algo import ASearch, Draw_open, Draw_close, Clear_visual, Maze, extract
 import concurrent.futures
 import threading
 
@@ -166,6 +166,13 @@ class Game:
         t_rect4 = text_4.get_rect(bottomright = (screen_w + 64, screen_h - 60))
         surf.blit(text_4, t_rect4)
         
+    def Clear(self):
+        self.END_aw.clear()
+        self.Player.clear()
+        self.Block.clear()
+        Clear_visual()
+        self.start = len(self.Player)
+        self.end = 0
 
 if __name__ == '__main__':
     pygame.init()
@@ -208,19 +215,40 @@ if __name__ == '__main__':
                 if event.key == pygame.K_SPACE:
                     if game.Player and game.END_aw:
                         ISPath = True
-                        if len(thread) == 0:
+                        Ready = True
+                        for i in game.Player:
+                            if i.path:
+                                Ready = False
+
+                        if len(thread) == 0 and Ready:
                             N = len(game.Player)
                             for i in range(0, N):
                                 thread.append(threading.Thread(target= ASearch, args= (game ,( int(game.Player[i].pos[0]), int(game.Player[i].pos[1]) ), game.END_aw[0], path, timer, i )) )
                                 thread[i].start()
-                        # for i in game.Player:
-                        #     with concurrent.futures.ThreadPoolExecutor() as executor:
-                        #         # path = []
-                        #         future = executor.submit( ASearch, game ,( int(i.pos[0]), int(i.pos[1]) ), game.END_aw[0] )
-                        #         return_value = future.result()
-                        #         i.get_path(return_value[0])
-                        #         game.time = return_value[1] #type: ignore
-                        # # game.path, game.time = ASearch(game ,( int(game.Player[0].pos[0]), int(game.Player[0].pos[1]) ), game.END_aw[0]) #type: ignore
+
+                if event.key == pygame.K_m:
+                    Ready = True
+                    for i in game.Player:
+                        if i.path:
+                            Ready = False
+
+                    if len(thread) == 0 and Ready:
+                        game.Clear()
+                        maze = (Maze(screen_w, screen_h, game.Block_size))
+                        extract(game, maze)
+
+                if event.key == pygame.K_c:
+                    Ready = True
+                    for i in game.Player:
+                        if i.path:
+                            Ready = False
+
+                    if len(thread) == 0 and Ready:
+                        game.Clear()
+
+
+
+
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_SPACE:
                     ISPath = False
