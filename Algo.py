@@ -30,19 +30,19 @@ class PioQueue:
     def copy(self):
         return self
 
-open_list = PioQueue()
-open_list_copy = []
-close_list = []
-
 # Checking = [(1, 0, 10), (-1, 0, 10), (0, 1, 10), (0, -1, 10), (1, 1, 14), (-1, 1, 14), (1, -1, 14), (-1, -1, 14)]
 Checking = [(1, 0, 10), (-1, 0, 10), (0, 1, 10), (0, -1, 10)]
 
-def ASearch(game, start, end):
+open_list_copy = []
+close_list_copy = []
+
+def ASearch(game, start, end, result, time_res, idx):
 
     #Clearing
     open_list = PioQueue()
-    close_list.clear()
+    close_list = []
     open_list_copy.clear()
+    close_list_copy.clear()
     Found = False
 
     #timing
@@ -77,28 +77,6 @@ def ASearch(game, start, end):
                 g = q[1] + dir[2]
                 f = int(g + h)
 
-                # if open_list.list:
-                #     Exact = False
-                #     for i in open_list.list:
-                #         if successor_pos == i[0]:
-                #                 if i[3] > f:
-                #                     i[3] = f
-                #                     i[4] = q[0]
-                #                 Exact = True
-                #                 break
-
-                #     for i in close_list:
-                #         if successor_pos == i[0]:
-                #             Exact = True
-                #             break
-
-                #     if not Exact:
-                #         open_list.push( [successor_pos, g, h, f, q[0]] )
-                #         open_list_copy.append( (successor_pos, g, h, f, q[0]) )
-
-                # else:
-                #     open_list.push( [successor_pos, g, h, f, q[0]] )
-                #     open_list_copy.append( (successor_pos, g, h, f, q[0]) )
                 Exact = False
                 for i in open_list.list:
                     if successor_pos == i[0]:
@@ -118,6 +96,7 @@ def ASearch(game, start, end):
                     open_list_copy.append( (successor_pos, g, h, f, q[0]) )
 
         close_list.append(q)
+        close_list_copy.append(q)
 
     if Found:
         if len(close_list) <= 1:
@@ -134,7 +113,10 @@ def ASearch(game, start, end):
                 pior = close_list[N][4]
     
     timer -= time.perf_counter()
-    return path, timer
+    result[idx] = path
+    time_res.append(timer)
+    return
+    # return path, timer
 
 def Draw_open(surf):
     box = pygame.Surface((16,16))
@@ -145,8 +127,12 @@ def Draw_open(surf):
 def Draw_close(surf):
     box = pygame.Surface((16,16))
     box.fill('orange')
-    for i in close_list:
+    for i in close_list_copy:
         surf.blit(box, (i[0][0] * 16, i[0][1] * 16))
+
+def Clear_visual():
+    close_list_copy.clear()
+    open_list_copy.clear()
 
 
 

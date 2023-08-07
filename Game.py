@@ -1,7 +1,8 @@
 import pygame, sys
 from Player import Player
-from Algo import ASearch, Draw_open, Draw_close
+from Algo import ASearch, Draw_open, Draw_close, Clear_visual
 import concurrent.futures
+import threading
 
 Collision = ['Wall']
 Checking = [(1, 0, 10), (-1, 0, 10), (0, 1, 10), (0, -1, 10)]
@@ -58,6 +59,7 @@ class Game:
                         if i.pos[0] == mouse_loco[0] and i.pos[1] == mouse_loco[1]:
                             Exist = True
                     if not Exist:
+                        Clear_visual()
                         self.Player.append(Player(self, mouse_loco))
 
             if right_click:
@@ -68,13 +70,10 @@ class Game:
                     del self.Block[mouse_locostr]
                 for i in self.Player.copy():
                     if not i.path:
+                        Clear_visual()
                         if mouse_loco[0] == i.pos[0] and mouse_loco[1] == i.pos[1]:
                             self.Player.remove(i)
                             self.start = len(self.Player)
-
-        if ISPath:
-            # self.Player[0].get_path()
-            self.time = -round(self.time, 2)
 
         if len(self.Player) == 1:  
             Draw_open(self.screen)
@@ -96,6 +95,7 @@ class Game:
     def Draw_path(self, color, path):
         surf = pygame.Surface((self.Block_size, self.Block_size))
         surf.fill(color)
+        surf.set_alpha(100)
         if path:
             for i in path:
                 self.screen.blit(surf, (i[0]*self.Block_size, i[1]*self.Block_size ))
@@ -180,6 +180,10 @@ if __name__ == '__main__':
     right_click = False
     ISPath = False
 
+    thread = []
+    path = [None] * 5
+    timer = []
+
     while True:
 
         for event in pygame.event.get():
@@ -204,19 +208,40 @@ if __name__ == '__main__':
                 if event.key == pygame.K_SPACE:
                     if game.Player and game.END_aw:
                         ISPath = True
-                        for i in game.Player:
-                            with concurrent.futures.ThreadPoolExecutor() as executor:
-                                # path = []
-                                future = executor.submit( ASearch, game ,( int(i.pos[0]), int(i.pos[1]) ), game.END_aw[0] )
-                                return_value = future.result()
-                                i.get_path(return_value[0])
-                                game.time = return_value[1] #type: ignore
-                        # game.path, game.time = ASearch(game ,( int(game.Player[0].pos[0]), int(game.Player[0].pos[1]) ), game.END_aw[0]) #type: ignore
+                        if len(thread) == 0:
+                            N = len(game.Player)
+                            for i in range(0, N):
+                                thread.append(threading.Thread(target= ASearch, args= (game ,( int(game.Player[i].pos[0]), int(game.Player[i].pos[1]) ), game.END_aw[0], path, timer, i )) )
+                                thread[i].start()
+                        # for i in game.Player:
+                        #     with concurrent.futures.ThreadPoolExecutor() as executor:
+                        #         # path = []
+                        #         future = executor.submit( ASearch, game ,( int(i.pos[0]), int(i.pos[1]) ), game.END_aw[0] )
+                        #         return_value = future.result()
+                        #         i.get_path(return_value[0])
+                        #         game.time = return_value[1] #type: ignore
+                        # # game.path, game.time = ASearch(game ,( int(game.Player[0].pos[0]), int(game.Player[0].pos[1]) ), game.END_aw[0]) #type: ignore
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_SPACE:
                     ISPath = False
 
         Display.fill('purple')
         game.update()
+
+        N = len(game.Player)
+        M = len(timer)
+        if N == M and N > 0:
+            for i in range(0, N):
+                game.Player[i].get_path(path[i])
+            game.time = timer[N - 1]
+            game.time = -round(game.time, 2)
+            path.clear()
+            path = [None] * 5
+            thread.clear()
+            timer.clear()
+        
+        # if len(thread) == 0:
+        #     print("OK")
+
         Display.blit(game.screen, (0, 0))
         pygame.display.flip()
